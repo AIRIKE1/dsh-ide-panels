@@ -5,7 +5,7 @@
 **A VS Code-style IDE shell as a DSH (DeepSeek Harness) client plugin**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.3-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.4-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 English · [**中文**](../../README.md)
@@ -97,6 +97,7 @@ Windows specifics, troubleshooting and verification: see [📦 INSTALL.md](../..
 | Action | Shortcut |
 |---|---|
 | Toggle whole shell | `Ctrl+Shift+S` |
+| Toggle center workspace | `Ctrl+Shift+M` |
 | Toggle right sidebar | `Ctrl+Shift+J` |
 | Toggle bottom panel | `Ctrl+Shift+B` |
 | Close one panel | ✕ in panel header |
@@ -118,6 +119,16 @@ All toggle states persist in Host settings (`ui-panels` namespace, lowercase, DS
 ---
 
 ## 🔷 Changelog
+
+> 🔷 **2026.09.14 — v0.1.4 released: bottom panel and center workspace are now one space**
+
+> The old model was wrong: the bottom panel was an independent toggle, and closing the center workspace left a 1fr gap in column 3 with the bottom bar floating in it, unreachable from the chat side.
+>
+> Now:
+> - **The bottom panel belongs to the center workspace**: closing the center hides the bottom with it (the `bottomOpen` preference is kept and restored when the center reopens); opening the bottom turns the center back on so it can never float in a gap
+> - **A closed center no longer occupies space**: column 3 collapses to `0px` and the chat column switches to `1fr`, **swallowing the freed space** (measured: chat 381px → **700px**), with `--dp-strip` zeroed so the splitters span the full height
+> - The chat|center splitter hides while the center is closed (nothing to split), and the right panel recomputes its width limit against the new space (the chat only keeps its minimum, so the right panel can be dragged wider)
+> - New **`Ctrl+Shift+M`** to toggle the center workspace (previously only shell/right/bottom had shortcuts)
 
 > 🔷 **2026.09.14 — v0.1.3 released: performance work + a critical persistence bug + dead-code cleanup**
 

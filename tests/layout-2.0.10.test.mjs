@@ -200,6 +200,13 @@ check(src.indexOf("if (document.hidden) return;") >= 0, "隐藏的终端暂停�
 check(src.indexOf("dp-rail-switch") >= 0, "底部开关类名仍在（无背景色）");
 check(src.indexOf('".dp-left ') < 0 && src.indexOf("toggleLeft") < 0, "左侧栏死代码已清除（不可达的 state/actions/CSS）");
 
+/* ── 10) 底栏与中间工作区是同一块空间（v0.1.4） ─────────────────── */
+check(src.indexOf('body[data-dp-shell=\\"1\\"][data-dp-nocenter=\\"1\\"] [data-dp-frame]{grid-template-columns:auto minmax(0,1fr) 0px var(--dp-right,336px) !important}') >= 0, "中间关闭时第 3 列收成 0、聊天列改 1fr（空间还给聊天）");
+check(src.indexOf("var bottomHidden = !bottomOpen || state.centerOpen === false;") >= 0, "关闭中间工作区时底栏一并隐藏");
+check(src.indexOf('if (next && s.centerOpen === false) persist("centerOpen", true);') >= 0, "开底栏时自动打开中间工作区（不会浮在空档里）");
+check(src.indexOf("var handleChat = state.centerOpen !== false ?") >= 0, "中间关闭时隐藏 聊天|中间 分栏手柄（没有可拖的分界）");
+check(src.indexOf("var centerClosedFlag = false;") >= 0 && src.indexOf("centerClosedFlag = state.centerOpen === false;") >= 0, "中间关闭时右侧栏按可用空间重算上限（聊天只保最小宽度）");
+
 console.log("");
 if (failures > 0) {
 	console.error(`FAILED: ${failures} 项未通过`);

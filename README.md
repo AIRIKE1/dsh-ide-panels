@@ -5,7 +5,7 @@
 **DSH（DeepSeek Harness）客户端布局插件 —— 仿 VS Code 的 IDE 外壳**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.3-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.4-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-%E6%8F%92%E4%BB%B6-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 [**English**](docs/lang/README_EN.md) · 中文
@@ -98,6 +98,7 @@ Windows 特殊处理、排障、验证方法见 [📦 详细安装说明 INSTALL
 | 操作 | 方式 |
 |---|---|
 | 开关整个外壳 | `Ctrl+Shift+S` |
+| 切换中间工作区 | `Ctrl+Shift+M` |
 | 切换右侧栏 | `Ctrl+Shift+J` |
 | 切换底部面板 | `Ctrl+Shift+B` |
 | 收起单个面板 | 面板标题右侧 ✕ |
@@ -120,6 +121,16 @@ Windows 特殊处理、排障、验证方法见 [📦 详细安装说明 INSTALL
 ---
 
 ## 🔷 更新日志
+
+> 🔷 **2026.09.14 — v0.1.4 发布：底栏与中间工作区合并为同一块空间**
+
+> 之前的模型有问题：底栏是独立开关，中间工作区关掉后第 3 列仍然留着 1fr 的空档，底栏还孤零零浮在这块空档里，聊天栏也过不去。
+>
+> 现在：
+> - **底栏属于中间工作区**：关闭中间工作区，底栏一起消失（`bottomOpen` 偏好保留，重开中间会自动恢复）；反过来打开底栏时会自动把中间工作区一起打开，不会浮在空档里
+> - **关闭中间工作区不再占空间**：第 3 列收成 `0px`，聊天列改用 `1fr` **吃满这块空间**（实测：聊天 381px → **700px**），`--dp-strip` 归零让分栏手柄撑满全高
+> - 中间关闭时「聊天|中间」分栏手柄自动隐藏（没有可拖的分界），右侧栏按新空间重算宽度上限（聊天只保最小宽度，右侧能拖得更宽）
+> - 新增 **`Ctrl+Shift+M`** 切换中间工作区（之前只有外壳/右侧/底部的快捷键）
 
 > 🔷 **2026.09.14 — v0.1.3 发布：性能优化 + 持久化致命 bug + 死代码清理**
 

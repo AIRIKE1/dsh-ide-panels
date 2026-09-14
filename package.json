@@ -1,6 +1,6 @@
 {
   "name": "dsh-ide-panels",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "DSH 客户端布局插件：仿 VS Code 的 IDE 外壳——中间标签工具区（编辑器/文档/终端/浏览器/代码变更，可多开）、右侧栏（资源管理器/搜索/源代码管理/远程/扩展/设置/Agent）、底部面板（终端/调试控制台/输出，可拉伸），真实 PowerShell 终端 + 本地代码变更对比 + Git 源码管理 + SSH/WSL 远程，全部可开关，状态持久化。",
   "type": "module",
   "main": "lib/index.js",
