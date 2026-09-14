@@ -5,7 +5,7 @@
 **A VS Code-style IDE shell as a DSH (DeepSeek Harness) client plugin**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.2-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.3-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 English · [**中文**](../../README.md)
@@ -118,6 +118,32 @@ All toggle states persist in Host settings (`ui-panels` namespace, lowercase, DS
 ---
 
 ## 🔷 Changelog
+
+> 🔷 **2026.09.14 — v0.1.3 released: performance work + a critical persistence bug + dead-code cleanup**
+
+> **Performance (measured, not felt)**
+>
+> | Item | Before | After |
+> |---|---|---|
+> | `sync()` (runs on panel switch / tab open / settings change) | included a **full-DOM scan**: **45–84 ms** at 18,555 nodes | scan removed entirely; **1.6–4.3 ms** steady state |
+> | The 5-second diagnostic probe | **84 ms** (getBoundingClientRect + textContent over the whole DOM every tick) | **2–8 ms** (full scan now once per 60 s) |
+> | Window resize drag | one sync per resize event | coalesced with rAF, at most one per frame |
+> | Background (inactive-tab) terminals | each still polled at **12.5 req/s** | paused while hidden (output is caught up on return) |
+> | Host pty output buffer | **unbounded** | capped at 1 MB, oldest dropped first |
+> | Opening a large file | whole file read into memory, then truncated (1 GB log = 1 GB RAM) | only the first 512 KB is read |
+>
+> **Fixed: panel state never persisted at all** (the most serious one)
+>
+> v0.1.0 stored `openTabs` as an **array of strings**; after v0.1.1 changed it to objects, the host's `settings.register()` threw while validating the existing stored document → the whole `ui-panels` namespace failed to register (client `status: unavailable`) → **the right-panel view, bottom-panel expanded state and open tabs were neither saved nor restored**, and writes were rejected for lack of a revision.
+> Now `openTabs` uses a lenient type plus a second, fully-lenient fallback schema, so no legacy document can ever brick the namespace again. A one-line-per-load persistence self-check (`settings-read`) was added to the diagnostics log.
+>
+> **Switching tabs no longer unmounts views**
+> Each tab gets its own pane and inactive ones are `display:none` — unsaved editor changes, terminal sessions/scrollback and scroll positions survive tab switches (previously all were lost).
+>
+> **Cleanup**
+> - Removed unreachable left-panel dead code: `leftOpen` / `leftView` / `toggleLeft` / `openLeft` / `setLeftView` plus the `.dp-left` CSS (the design keeps chat pinned left, so the plugin's own left column was never rendered)
+> - Removed the duplicated `browser` key and the null-returning `chat` entry from the view dispatch table
+> - Added `tests/i18n.test.mjs`: missing/orphan message checks (151 keys per language, all 129 statically used keys covered, `view.` dynamic prefix checked separately)
 
 > 🔷 **2026.09.14 — v0.1.2 released: systematic bug sweep + 6 fixes**
 

@@ -189,6 +189,17 @@ check((src.split('"dp-rail-btn dp-rail-switch"').length - 1) === 4, "4 个开关
 check(src.indexOf('do { key = id + "-" + (++tabSeq); } while (taken[key]);') >= 0, "标签 key 生成时对已有 key 去重（客户端重载后不再撞 key）");
 check(src.indexOf('"search.noWorkspace"') >= 0, "搜索在无工作区时给出明确提示（不再发 dir:\"\" 让 host 回退到安装目录）");
 
+/* ── 9) 性能优化的源码契约（v0.1.3） ────────────────────────────── */
+check(src.indexOf('var cands = document.querySelectorAll("div,span,h1,h2,p,button")') < 0, "sync 里不再有全 DOM 扫描（18555 节点下每次 45-84ms）");
+check(src.indexOf("function layoutProbe(full)") >= 0, "布局探针支持按需全量（重的 topEls 扫描只在 full 时跑）");
+check(src.indexOf("if (full) {") >= 0 && src.indexOf("diagTick % 12 === 0") >= 0, "全量探针每 12 次心跳才跑一次（不再是每 5 秒 84ms 卡顿）");
+check(src.indexOf("resizeRaf") >= 0, "resize 事件用 rAF 合并（拖窗口不会每帧跑多次 sync）");
+check(src.indexOf("if (!titleRowEl || !titleRowEl.isConnected)") >= 0, "titleRow 查询结果被缓存（不再每次全文档属性子串匹配）");
+check(src.indexOf('className: "dp-center-pane"') >= 0, "中间标签各自一个 pane（切标签不再卸载视图）");
+check(src.indexOf("if (document.hidden) return;") >= 0, "隐藏的终端暂停轮询（每个后台终端 12.5 次/秒 → 0）");
+check(src.indexOf("dp-rail-switch") >= 0, "底部开关类名仍在（无背景色）");
+check(src.indexOf('".dp-left ') < 0 && src.indexOf("toggleLeft") < 0, "左侧栏死代码已清除（不可达的 state/actions/CSS）");
+
 console.log("");
 if (failures > 0) {
 	console.error(`FAILED: ${failures} 项未通过`);

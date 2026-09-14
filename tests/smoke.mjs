@@ -84,7 +84,7 @@ const index = readFileSync(indexPath, "utf8");
 check(index.includes('export const name = "dsh-ide-panels"'), '导出 name');
 check(index.includes("settingsNamespace(\"ui-panels\")"), '注册 ui-panels 命名空间（全小写合法）');
 check(index.includes('PanelsSettingsSchema'), '定义持久化 schema');
-check(index.includes("leftView") && index.includes("rightView") && index.includes("bottomView"), 'schema 含左右栏/底部视图字段');
+check(index.includes("rightView") && index.includes("bottomView") && index.includes("openTabs"), 'schema 含右栏/底部/标签页字段');
 check(index.includes('path: "/dsh-ui-panels/plugins"'), '插件列表路由');
 check(index.includes('path: "/dsh-ui-panels/plugins/toggle"'), '插件开关路由');
 check(index.includes("function togglePlugin"), 'togglePlugin 实现');

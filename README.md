@@ -5,7 +5,7 @@
 **DSH（DeepSeek Harness）客户端布局插件 —— 仿 VS Code 的 IDE 外壳**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.2-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.3-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-%E6%8F%92%E4%BB%B6-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 [**English**](docs/lang/README_EN.md) · 中文
@@ -120,6 +120,32 @@ Windows 特殊处理、排障、验证方法见 [📦 详细安装说明 INSTALL
 ---
 
 ## 🔷 更新日志
+
+> 🔷 **2026.09.14 — v0.1.3 发布：性能优化 + 持久化致命 bug + 死代码清理**
+
+> **性能（都是实测数字，不是体感）**
+>
+> | 项目 | 之前 | 现在 |
+> |---|---|---|
+> | `sync()`（切面板/开标签/改设置都会跑） | 每次含一次**全 DOM 扫描**：18555 节点下 **45–84ms** | 扫描彻底移除，稳态 **1.6–4.3ms** |
+> | 5 秒一次的诊断探针 | **84ms**（每次都在全 DOM 上做 getBoundingClientRect + textContent） | **2–8ms**（全量扫描改为每 60 秒一次） |
+> | 窗口拖拽缩放 | 每个 resize 事件都跑一次 sync | rAF 合并，一帧最多一次 |
+> | 后台（非当前标签）的终端 | 每个仍以 **12.5 次/秒** 轮询 | 隐藏即暂停（恢复可见时补回输出） |
+> | host 端 pty 输出缓冲 | **无上限**，长期不读会一直涨 | 封顶 1MB，丢弃最旧部分 |
+> | 打开大文件 | 先把整个文件读进内存再截断（1GB 日志 = 1GB 内存） | 只读前 512KB |
+>
+> **功能：修复「面板状态完全不持久化」**（最严重的一个）
+>
+> v0.1.0 存的 `openTabs` 是**字符串数组**，v0.1.1 改成对象数组后，host 启动时 `settings.register()` 校验既有持久化数据会**抛错** → `ui-panels` 命名空间整个注册失败（客户端 `status: unavailable`）→ **右侧栏视图、底部展开态、打开的标签页既不保存也不恢复**，而且因为拿不到 revision，写入也会被拒。
+> 现在：`openTabs` 用宽松类型 + 再挂一份「全宽松」兜底 schema，任何历史数据都不会再把命名空间炸掉。诊断日志里新增每次加载一条的持久化自检（`settings-read`）。
+>
+> **功能：切标签不再卸载视图**
+> 每个标签一个 pane、非活动的 `display:none` —— 编辑器里**未保存的改动**、终端会话与滚动历史、滚动位置都不会因为切标签而丢失（之前全部会丢）。
+>
+> **清理**
+> - 删除不可达的左侧栏死代码：`leftOpen` / `leftView` / `toggleLeft` / `openLeft` / `setLeftView` + `.dp-left` CSS（用户设计里聊天固定在最左，插件左侧栏从未渲染过）
+> - 视图分发表里重复的 `browser` 键与返回 null 的 `chat` 项
+> - 新增 `tests/i18n.test.mjs`：文案缺失/孤儿检查（中英各 151 条、129 个静态 key 全覆盖，`view.` 动态前缀单列校验）
 
 > 🔷 **2026.09.14 — v0.1.2 发布：一轮系统性排查 + 6 个 bug 修复**
 
