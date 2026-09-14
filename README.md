@@ -5,7 +5,7 @@
 **DSH（DeepSeek Harness）客户端布局插件 —— 仿 VS Code 的 IDE 外壳**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.1-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.2-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-%E6%8F%92%E4%BB%B6-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 [**English**](docs/lang/README_EN.md) · 中文
@@ -120,6 +120,22 @@ Windows 特殊处理、排障、验证方法见 [📦 详细安装说明 INSTALL
 ---
 
 ## 🔷 更新日志
+
+> 🔷 **2026.09.14 — v0.1.2 发布：一轮系统性排查 + 6 个 bug 修复**
+
+> 对 host 路由做了边界压测、对客户端做了真实页面自检（573 次心跳零运行期错误），发现并修掉：
+>
+> | # | 问题 | 影响 |
+> |---|---|---|
+> | 1 | 搜索默认模式「文件名+内容」**从不读正文**（条件写错，只在文件名已命中时才搜内容） | 搜代码里的符号/关键字几乎搜不到东西 |
+> | 2 | 空工作区时 `dir`/`search`/`git`/`changes` 的 path 为空**静默回退到宿主进程 CWD** | 无活动会话时会"搜出"DSH 安装目录的文件；极端情况下会在安装目录里建变更快照 |
+> | 3 | `/remote` 未知 action 不报错，**悄悄执行默认的 `wsl ls`** | 打错参数会莫名执行 WSL 命令 |
+> | 4 | `/pty/kill` 销毁不存在的会话返回 `ok:true` | 与 read/write 的 404 行为不一致 |
+> | 5 | 二进制文件按 UTF-8 读进编辑器 → **一整屏乱码**（UTF-16 文本同样） | 资源管理器点到图片/可执行文件时卡且乱；UTF-16 文本现在正确解码 |
+> | 6 | 中间标签 key 用模块级计数器，**客户端重载后计数器归零** → 与已恢复的历史标签撞 key | 关闭/拖动标签会作用到错误的标签 |
+>
+> 另修正一处不一致：`dir`/`git`/`changes` 对不存在的路径统一返回 404/400 而不是落到 CWD。
+> 新增 `tests/host-routes.test.mjs`（stub webServer 直接调用 host 处理函数，覆盖上述全部修复 + 基础路由回归）。
 
 > 🔷 **2026.09.14 — v0.1.1 发布：适配 DSH Desktop 2.0.10 外壳重写**
 

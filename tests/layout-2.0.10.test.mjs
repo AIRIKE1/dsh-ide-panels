@@ -185,6 +185,10 @@ check(src.indexOf("typeof L.closeDetails") >= 0, "旧 API closeDetails() 仍作�
 check(src.indexOf(".dp-rail-btn.dp-rail-switch[data-active]{background:transparent") >= 0, "开关按钮激活态无背景色（CSS 规则）");
 check((src.split('"dp-rail-btn dp-rail-switch"').length - 1) === 4, "4 个开关按钮（中间/右侧/底部/外壳）都带 dp-rail-switch 类");
 
+/* ── 8) 客户端 bug 修复的源码契约（v0.1.2 排查） ─────────────────── */
+check(src.indexOf('do { key = id + "-" + (++tabSeq); } while (taken[key]);') >= 0, "标签 key 生成时对已有 key 去重（客户端重载后不再撞 key）");
+check(src.indexOf('"search.noWorkspace"') >= 0, "搜索在无工作区时给出明确提示（不再发 dir:\"\" 让 host 回退到安装目录）");
+
 console.log("");
 if (failures > 0) {
 	console.error(`FAILED: ${failures} 项未通过`);

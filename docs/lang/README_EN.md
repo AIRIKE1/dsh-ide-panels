@@ -5,7 +5,7 @@
 **A VS Code-style IDE shell as a DSH (DeepSeek Harness) client plugin**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.1-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.2-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 English · [**中文**](../../README.md)
@@ -118,6 +118,22 @@ All toggle states persist in Host settings (`ui-panels` namespace, lowercase, DS
 ---
 
 ## 🔷 Changelog
+
+> 🔷 **2026.09.14 — v0.1.2 released: systematic bug sweep + 6 fixes**
+
+> Host routes were stress-tested at their boundaries and the client was self-checked inside the live page (573 heartbeats, zero runtime errors). Found and fixed:
+>
+> | # | Bug | Impact |
+> |---|---|---|
+> | 1 | Search's default "name+content" mode **never read file bodies** (wrong condition: it only scanned content for files whose name already matched) | Searching for a symbol/keyword inside files returned almost nothing |
+> | 2 | With an empty workspace, an empty `path`/`dir` on `dir`/`search`/`git`/`changes` **silently fell back to the host process CWD** | With no active session the search "found" files from the DSH install directory; a snapshot could even be created there |
+> | 3 | `/remote` with an unknown action did not fail — it **silently ran the default `wsl ls`** | A typo'd parameter spawned a WSL command out of nowhere |
+> | 4 | `/pty/kill` on a nonexistent session returned `ok:true` | Inconsistent with read/write, which correctly 404 |
+> | 5 | Binary files were read as UTF-8 into the editor → **a screenful of mojibake** (same for UTF-16 text) | Clicking an image/executable in the explorer was slow and garbled; UTF-16 text is now decoded properly |
+> | 6 | Tab keys came from a module-level counter that **resets when the client reloads**, colliding with restored tabs | Closing or dragging a tab could hit the wrong tab |
+>
+> Also unified `dir`/`git`/`changes` to return 404/400 for nonexistent paths instead of falling back to the CWD.
+> Added `tests/host-routes.test.mjs` (stub webServer calling the host handlers directly; covers every fix above plus basic route regressions).
 
 > 🔷 **2026.09.14 — v0.1.1 released: DSH Desktop 2.0.10 shell rewrite support**
 
