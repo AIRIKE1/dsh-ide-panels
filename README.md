@@ -5,7 +5,7 @@
 **DSH（DeepSeek Harness）客户端布局插件 —— 仿 VS Code 的 IDE 外壳**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.1-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-%E6%8F%92%E4%BB%B6-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 [**English**](docs/lang/README_EN.md) · 中文
@@ -110,15 +110,22 @@ Windows 特殊处理、排障、验证方法见 [📦 详细安装说明 INSTALL
 ## 🔍 工作原理
 
 1. 插件注册进官方 `shell.overlay` 槽位（root 级 list），在 DSH 对话界面叠加可开关的外壳；
-2. 右侧栏注册进 AppFrame 的 `details` 槽位（priority -1 压制官方详情面板），作为同级网格列渲染——对话列自动变窄、互不遮挡；
-3. 网格用 CSS 变量（`--dp-left/--dp-right/--dp-chat/--dp-strip`）动态驱动：侧栏宽、聊天宽、右侧宽、底部高都能拖拽/拉伸，并随窗口大小自适应；
-4. 终端走 host 端 node-pty（winpty 后端）——真实 PowerShell 进程，xterm.js 渲染，轮询读写；
-5. 代码变更走**本地文件快照**（`.dsh-changes/` 目录）——不依赖 git，任何目录都能对比；
-6. 搜索/远程/Git 全部由 host 路由直连本地（`/dsh-ui-panels/*`），不经过 Agent。
+2. 右侧栏注册进 AppFrame 的右列槽位（DSH 2.0.10+ 为 `rightbar`，旧版为 `details`；priority -1 压制官方右栏），作为同级网格列渲染——对话列自动变窄、互不遮挡；
+3. **布局锚点与官方类名解耦**：官方 AppFrame 的类名是构建期 CSS Modules 哈希（升级即变），插件改为运行时用稳定锚点 `data-shell-overlay` 找到框架与其三个列，打上自有属性 `data-dp-frame` / `data-dp-col`，CSS 只引用这两个属性——DSH 换哈希也不会失配；
+4. 网格用 CSS 变量（`--dp-left/--dp-right/--dp-chat/--dp-strip`）动态驱动：侧栏宽、聊天宽、右侧宽、底部高都能拖拽/拉伸，并随窗口大小自适应（中间工具区保底 300px）；
+5. 终端走 host 端 node-pty（winpty 后端）——真实 PowerShell 进程，xterm.js 渲染，轮询读写；
+6. 代码变更走**本地文件快照**（`.dsh-changes/` 目录）——不依赖 git，任何目录都能对比；
+7. 搜索/远程/Git 全部由 host 路由直连本地（`/dsh-ui-panels/*`），不经过 Agent。
 
 ---
 
 ## 🔷 更新日志
+
+> 🔷 **2026.09.14 — v0.1.1 发布：适配 DSH Desktop 2.0.10 外壳重写**
+
+> 2.0.10 重写了 AppFrame，本插件两处硬编码跟着失效：① 布局列框架的 CSS Modules 哈希类名变了（`.pI_x6G_frame` → `.qNbT7G_frame`），4 列网格覆盖选择器失配，中间工具区浮到聊天列上方、右侧栏空白；② 官方右栏槽位改名（`details` → `rightbar`），右侧栏整块不再渲染；③ `ctx.layout.closeDetails()` 被 `closeRightbar()` 取代。
+>
+> v0.1.1 起**不再依赖任何官方哈希类名**：运行时通过稳定的 `data-shell-overlay` 锚点定位框架与三个列，打上自有属性 `data-dp-frame` / `data-dp-col`，CSS 只引用这两个属性——以后 DSH 再换哈希也不会失配；右栏槽位双注册（`rightbar` 优先 + `details` 兜底，互斥只生效一个），新旧版本都能用；中间工具区最小宽度提到 300px，避免被聊天/右侧栏挤成一条缝；底部 4 个开关按钮改为无背景色。
 
 > 🔷 **2026.08.18 — v0.1.0 发布**：首个版本。中间标签工具区（多开/拖拽/关闭）、右侧栏（资源管理器/搜索/Git/远程/扩展/设置/Agent）、底部面板（可拉伸 + 终端/调试/输出）、真实 PowerShell 终端（winpty + xterm）、本地代码变更对比（快照 + 前后高亮）、Git 源码管理、SSH/WSL 远程、本地文件搜索。
 

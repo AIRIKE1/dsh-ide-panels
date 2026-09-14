@@ -92,6 +92,12 @@ let settingsSubscriber = null;
 let settingsValue = { open: true, leftOpen: true, rightOpen: true, bottomOpen: false, leftView: "editor", rightView: "explorer", bottomView: "terminal" };
 let persistCalls = [];
 let effectDisposers = [];
+let layoutCalls = [];       // ctx.layout 调用轨迹（新 API 应优先）
+
+/** 右栏槽位注册：DSH 2.0.10+ 名为 rightbar，旧版名为 details（两者只应有一个生效）。 */
+function rightSlotReg() {
+  return registrations.find((r) => r.options.name === "rightbar" || r.options.name === "details");
+}
 
 const snapshotStoreStub = () => ({
   subscribe: () => () => {},
@@ -128,7 +134,12 @@ const ctx = {
     startSession: () => {}
   },
   connection: { isLoopback: true },
-  layout: { closeDetails: () => {}, openDetails: () => {}, toggleSidebar: () => {} },
+  layout: {
+    closeRightbar: () => { layoutCalls.push("closeRightbar"); },
+    closeDetails: () => { layoutCalls.push("closeDetails"); },
+    openDetails: () => {},
+    toggleSidebar: () => {}
+  },
   loader: { entries: () => [] },
   effect: (cb) => { const d = cb(); if (typeof d === "function") effectDisposers.push(d); },
   on: () => () => {},
@@ -184,19 +195,22 @@ try {
 }
 check(applyError === null, `apply() 不抛错${applyError ? "：" + applyError.message : ""}`);
 check(injections.some((i) => i.name === "shell.overlay"), "已注入 shell.overlay");
-check(injections.some((i) => i.name === "details"), "已注入 details（右侧栏同级列）");
+check(injections.some((i) => i.name === "rightbar"), "已注入 rightbar（DSH 2.0.10+ 右栏槽位）");
+check(injections.some((i) => i.name === "details"), "已注入 details（旧版右栏槽位兜底）");
 
 console.log("2) 注册并渲染外壳树（迷你渲染器执行全部组件）");
 let shellError = null;
 try {
   for (const inj of injections) inj.cb(); // 触发全部 ctx.slots.register
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   check(overlayReg !== void 0 && overlayReg.options.id === "dsh-ui-panels", "overlay 注册含 id=dsh-ui-panels");
   check(typeof overlayReg.options.label === "function", "overlay label 为函数");
-  check(detailsReg !== void 0 && detailsReg.options.priority === -1, "details 注册 priority=-1（压制官方详情面板）");
+  check(rightReg !== void 0 && rightReg.options.priority === -1, "右栏注册 priority=-1（压制官方右栏）");
+  check(registrations.filter((r) => r.options.name === "rightbar" || r.options.name === "details").length === 1, "右栏槽位只注册一个（不会重复渲染）");
+  check(layoutCalls.includes("closeRightbar") && !layoutCalls.includes("closeDetails"), "优先调用新 API closeRightbar()");
   if (overlayReg) renderElement(overlayReg.component({}), 0);
-  if (detailsReg) renderElement(detailsReg.component({}), 0);
+  if (rightReg) renderElement(rightReg.component({}), 0);
 } catch (e) {
   shellError = e;
 }
@@ -207,9 +221,9 @@ settingsValue = { open: true, leftOpen: true, rightOpen: true, bottomOpen: true,
 try {
   if (settingsSubscriber) settingsSubscriber();
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   renderElement(overlayReg.component({}), 0);
-  renderElement(detailsReg.component({}), 0);
+  renderElement(rightReg.component({}), 0);
   check(true, "切换视图后重新渲染不抛错");
 } catch (e) {
   check(false, "切换视图渲染抛错：" + e.message);
@@ -218,9 +232,9 @@ settingsValue = { open: true, leftOpen: true, rightOpen: true, bottomOpen: true,
 try {
   if (settingsSubscriber) settingsSubscriber();
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   renderElement(overlayReg.component({}), 0);
-  renderElement(detailsReg.component({}), 0);
+  renderElement(rightReg.component({}), 0);
   check(true, "agent/output 视图渲染不抛错");
 } catch (e) {
   check(false, "agent/output 渲染抛错：" + e.message);
@@ -229,9 +243,9 @@ settingsValue = { open: true, leftOpen: true, rightOpen: true, bottomOpen: true,
 try {
   if (settingsSubscriber) settingsSubscriber();
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   renderElement(overlayReg.component({}), 0);
-  renderElement(detailsReg.component({}), 0);
+  renderElement(rightReg.component({}), 0);
   check(true, "extensions 视图渲染不抛错（含 fetch 失败兜底）");
 } catch (e) {
   check(false, "extensions 渲染抛错：" + e.message);
@@ -242,9 +256,9 @@ settingsValue = { open: false, leftOpen: true, rightOpen: true, bottomOpen: true
 try {
   if (settingsSubscriber) settingsSubscriber();
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   renderElement(overlayReg.component({}), 0);
-  renderElement(detailsReg.component({}), 0);
+  renderElement(rightReg.component({}), 0);
   check(true, "关闭态渲染不抛错");
 } catch (e) {
   check(false, "关闭态渲染抛错：" + e.message);
@@ -263,9 +277,9 @@ settingsValue = { open: true, leftOpen: true, rightOpen: true, bottomOpen: true,
 try {
   if (settingsSubscriber) settingsSubscriber();
   const overlayReg = registrations.find((r) => r.options.name === "shell.overlay");
-  const detailsReg = registrations.find((r) => r.options.name === "details");
+  const rightReg = rightSlotReg();
   renderElement(overlayReg.component({}), 0);
-  renderElement(detailsReg.component({}), 0);
+  renderElement(rightReg.component({}), 0);
   check(true, "底部展开态渲染不抛错");
 } catch (e) {
   check(false, "底部展开态渲染抛错：" + e.message);
@@ -352,16 +366,16 @@ try {
   listeners.pointerup.length = 0;
   check(bodyStyle.props["--dp-chat"] === "220px", `拖拽钳制最小值：--dp-chat=220px（实际 ${bodyStyle.props["--dp-chat"]}）`);
 
-  // 全屏↔窗口化差异：小窗口下动态上限生效（不再用固定 620；上限=窗宽-侧栏-右栏-中间最小160）
+  // 全屏↔窗口化差异：小窗口下动态上限生效（上限=窗宽-侧栏-右栏-中间最小300）
   bodyStyle.props = {};
-  windowStub.innerWidth = 800; // 模拟窗口化小窗
+  windowStub.innerWidth = 1000; // 模拟窗口化小窗
   chatHandle.props.onPointerDown({ clientX: 0, preventDefault() {} });
   const pm4 = listeners.pointermove.pop();
   pm4({ clientX: 5000 }); // 拖到极大 → 应钳到动态上限
   listeners.pointerup.forEach((fn) => fn({}));
   listeners.pointerup.length = 0;
-  // 上限 = 800 - 侧栏0 - 右栏396 - 中间最小160 = 244
-  check(bodyStyle.props["--dp-chat"] === "244px", `小窗口动态上限：--dp-chat=244px（实际 ${bodyStyle.props["--dp-chat"]}）`);
+  // 上限 = 1000 - 侧栏0 - 右栏396 - 中间最小300 = 304
+  check(bodyStyle.props["--dp-chat"] === "304px", `小窗口动态上限：--dp-chat=304px（实际 ${bodyStyle.props["--dp-chat"]}）`);
   windowStub.innerWidth = 1600;
 } catch (e) {
   check(false, "拖拽测试抛错：" + e.message);

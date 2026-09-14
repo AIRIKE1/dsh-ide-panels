@@ -5,7 +5,7 @@
 **A VS Code-style IDE shell as a DSH (DeepSeek Harness) client plugin**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-[![version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
+[![version](https://img.shields.io/badge/version-0.1.1-green.svg)](https://github.com/AIRIKE1/dsh-ide-panels/releases)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-purple.svg)](https://github.com/deepseek-ai/deepseek-harness)
 
 English · [**中文**](../../README.md)
@@ -118,6 +118,12 @@ All toggle states persist in Host settings (`ui-panels` namespace, lowercase, DS
 ---
 
 ## 🔷 Changelog
+
+> 🔷 **2026.09.14 — v0.1.1 released: DSH Desktop 2.0.10 shell rewrite support**
+
+> 2.0.10 rewrote AppFrame and broke two hardcoded assumptions here: (1) the layout column frame's CSS Modules hash changed (`.pI_x6G_frame` → `.qNbT7G_frame`), so the 4-column grid override stopped matching — the middle tool area floated over the chat column and the right sidebar went blank; (2) the official right-column slot was renamed (`details` → `rightbar`), so the whole right sidebar stopped rendering; (3) `ctx.layout.closeDetails()` was replaced by `closeRightbar()`.
+>
+> Since v0.1.1 the plugin **no longer depends on any official hashed class name**: it locates the frame and its three columns at runtime through the stable `data-shell-overlay` anchor and tags them with its own `data-dp-frame` / `data-dp-col` attributes, so the CSS only references those. The right slot is registered under both names (`rightbar` first, `details` as fallback, mutually exclusive) for old and new DSH alike. The middle tool area now has a 300px minimum width so it cannot be squeezed into a slit, and the four bottom switches lost their background color.
 
 > 🔷 **2026.08.18 — v0.1.0 released**: first release. Middle tool tabs (multi-open / drag / close), right sidebar (explorer / search / git / remote / extensions / settings / agent), resizable bottom panel (terminal / debug / output), real PowerShell terminal (winpty + xterm), local change diff (snapshot + highlighted before/after), git source control, SSH/WSL remote, local file search.
 
